@@ -62,6 +62,44 @@ docker compose logs -f
 | `docker compose restart`                                     | Restart the container                          |
 | `docker exec -it c-postgres-db psql -U postgres -d postgres` | Open interactive PostgreSQL shell              |
 
+## ⚠️ Breaking Change for PostgreSQL 18 — Data Directory
+
+PostgreSQL 18+ Docker images changed how data is stored. They now use major-version-specific subdirectories under `/var/lib/postgresql`. **If you have existing data** from PostgreSQL 17 or earlier (stored under the old mount path `/var/lib/postgresql/data`), the container will refuse to start with the error:
+
+```
+Error: in 18+, these Docker images are configured to store database data in a format which is compatible with "pg_ctlcluster" ...
+There appears to be PostgreSQL data in: /var/lib/postgresql/data (unused mount/volume)
+```
+
+### Fix for Fresh Deployments (no existing data)
+
+The volume mount has been updated to target `/var/lib/postgresql` (without `/data`). Simply pull the latest code and run:
+
+```bash
+git pull
+docker compose down -v   # ⚠️ This DELETES all existing data!
+docker compose up -d
+```
+
+### How to Migrate Existing Data (if you have a running PG 17 container)
+
+If you have an old container with data you want to keep, do a `pg_dump` backup first, then restore into the new PG 18 container:
+
+```bash
+# 1. Backup old data from your running container
+docker exec -t c-postgres-db pg_dumpall -U postgres > backup.sql
+
+# 2. Tear down old container + delete old volume data
+docker compose down -v
+
+# 3. Pull latest compose file with fixed mount, then start fresh
+git pull
+docker compose up -d
+
+# 4. Restore data into the new container
+cat backup.sql | docker exec -i c-postgres-db psql -U postgres
+```
+
 ## Troubleshooting: Docker Hub Timeout (Hong Kong / China VPS)
 
 If you see an error like this when running `docker compose up -d`:
