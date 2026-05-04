@@ -100,41 +100,6 @@ docker compose up -d
 cat backup.sql | docker exec -i c-postgres-db psql -U postgres
 ```
 
-## Troubleshooting: Docker Hub Timeout (Hong Kong / China VPS)
-
-If you see an error like this when running `docker compose up -d`:
-
-```
-Error response from daemon: failed to resolve reference "docker.io/library/postgres:18-alpine": ... i/o timeout
-```
-
-This means your VPS cannot reach Docker Hub directly (common on HK/China-based VPS).
-
-### Fix: Configure Docker Registry Mirrors
-
-Use the included setup script to configure Chinese registry mirrors:
-
-```bash
-# On your VPS, run:
-chmod +x scripts/setup-docker-mirror.sh
-sudo ./scripts/setup-docker-mirror.sh
-```
-
-This script:
-1. Configures Docker daemon to use mirrors (Tencent Cloud, USTC, NetEase)
-2. Backs up your existing `/etc/docker/daemon.json`
-3. Restarts Docker and tests pulling the `postgres:18-alpine` image
-
-### Manual Alternative (if script doesn't work)
-
-```bash
-# Manually pull via a specific mirror:
-docker pull docker.mirrors.ustc.edu.cn/library/postgres:18-alpine
-
-# Then retag for compose:
-docker tag docker.mirrors.ustc.edu.cn/library/postgres:18-alpine postgres:18-alpine
-```
-
 ## Resource Limits
 
 This container is configured for a **2-core, 2GB RAM VPS**:

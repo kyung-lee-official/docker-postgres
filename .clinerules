@@ -1,0 +1,5 @@
+# Project Preferences
+
+## Git Operations
+- Do NOT automatically commit or push changes to git.
+- Make file changes only. Leave git management to the user.
